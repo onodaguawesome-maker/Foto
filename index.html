@@ -1,86 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Media Gallery</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Virtual Pro - Virtual Numbers</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="permission-banner" id="permissionBanner">
-        Gallery needs storage access to save your media and albums.
+  <nav class="navbar">
+    <div class="nav-brand">SMS Virtual Pro</div>
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Home</a>
+      <a href="/login" class="btn btn-outline">Login</a>
+      <a href="/signup" class="btn btn-primary">Sign Up</a>
     </div>
+  </nav>
 
-    <header>
-        <div class="header-content">
-            <h1>Media Gallery</h1>
-            <div class="header-actions">
-                <button class="btn" id="addBtn">+ Add Media</button>
-                <button class="btn btn-secondary" id="newAlbumBtn">+ New Album</button>
-            </div>
-        </div>
-        <nav class="tabs">
-            <button class="tab active" data-filter="all">All</button>
-            <button class="tab" data-filter="favorites">Favorites</button>
-            <button class="tab" data-filter="images">Images</button>
-            <button class="tab" data-filter="videos">Videos</button>
-            <div class="album-dropdown">
-                <button class="tab" id="albumTab">Albums ▼</button>
-                <div class="dropdown-content" id="albumList"></div>
-            </div>
-        </nav>
-    </header>
-
-    <main>
-        <input type="file" id="fileInput" accept="image/*,video/*" multiple>
-        <div class="gallery" id="gallery"></div>
-        <div class="empty-state" id="emptyState">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            <h2>No media yet</h2>
-            <p>Tap "Add Media" to import photos and videos</p>
-        </div>
-    </main>
-
-    <!-- Lightbox / Media Viewer -->
-    <div class="lightbox" id="lightbox">
-        <button class="lightbox-close" id="lightboxClose">&times;</button>
-        <button class="lightbox-nav prev" id="prevBtn">‹</button>
-        <button class="lightbox-nav next" id="nextBtn">›</button>
-
-        <div class="media-container" id="mediaContainer"></div>
-
-        <div class="media-controls">
-            <div class="video-controls" id="videoControls">
-                <button class="control-btn" id="playPauseBtn">▶</button>
-                <input type="range" id="seekBar" value="0" min="0" max="100">
-                <span id="timeDisplay">0:00 / 0:00</span>
-                <label class="brightness-control">
-                    ☀ <input type="range" id="brightness" min="50" max="200" value="100">
-                </label>
-            </div>
-            <div class="action-bar">
-                <button class="action-btn" id="favoriteBtn">♡ Favorite</button>
-                <button class="action-btn" id="shareBtn">Share</button>
-                <button class="action-btn" id="albumAddBtn">Add to Album</button>
-                <button class="action-btn danger" id="deleteBtn">Delete</button>
-            </div>
-        </div>
+  <section class="hero">
+    <h1>Get Virtual SMS Numbers Instantly</h1>
+    <p>Access phone numbers from 200+ countries for WhatsApp, Telegram, Facebook & more.</p>
+    <div class="hero-buttons">
+      <a href="/signup" class="btn btn-primary btn-large">Get Started</a>
+      <a href="#how-to-use" class="btn btn-secondary btn-large">How It Works</a>
     </div>
-
-    <!-- Album Modal -->
-    <div class="modal" id="albumModal">
-        <div class="modal-content">
-            <h3>Create New Album</h3>
-            <input type="text" id="albumNameInput" placeholder="Album name">
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="cancelAlbum">Cancel</button>
-                <button class="btn" id="saveAlbum">Create</button>
-            </div>
-        </div>
+    
+    <!-- Apple Liquid Glass Scroll Down Button -->
+    <div class="scroll-down">
+      <button id="scrollDownBtn" class="glass-button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
+  </section>
 
-<script src="script.js"></script>
+  <section class="features">
+    <h2>Why Choose Us</h2>
+    <div class="feature-grid">
+      <div class="card">
+        <h3>200+ Countries</h3>
+        <p>UK, USA, Nigeria, Canada & all major countries worldwide</p>
+      </div>
+      <div class="card">
+        <h3>All Apps Supported</h3>
+        <p>WhatsApp, Telegram, Google, Facebook, Instagram, TikTok</p>
+      </div>
+      <div class="card">
+        <h3>Pay in Naira</h3>
+        <p>Affordable pricing from ₦400. Pay via WhatsApp</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-to-use" class="how-to-use">
+    <h2>How to Use</h2>
+    <div class="steps">
+      <div class="step"><span>1</span> Sign up for a free account</div>
+      <div class="step"><span>2</span> Choose app like WhatsApp or Telegram</div>
+      <div class="step"><span>3</span> Pick country & add to cart</div>
+      <div class="step"><span>4</span> Checkout via WhatsApp to 08088639901</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 SMS Virtual Pro. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
