@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Gallery</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="permission-banner" id="permissionBanner">
+        Gallery needs storage access to save your media and albums.
+    </div>
+
+    <header>
+        <div class="header-content">
+            <h1>Media Gallery</h1>
+            <div class="header-actions">
+                <button class="btn" id="addBtn">+ Add Media</button>
+                <button class="btn btn-secondary" id="newAlbumBtn">+ New Album</button>
+            </div>
+        </div>
+        <nav class="tabs">
+            <button class="tab active" data-filter="all">All</button>
+            <button class="tab" data-filter="favorites">Favorites</button>
+            <button class="tab" data-filter="images">Images</button>
+            <button class="tab" data-filter="videos">Videos</button>
+            <div class="album-dropdown">
+                <button class="tab" id="albumTab">Albums ▼</button>
+                <div class="dropdown-content" id="albumList"></div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple>
+        <div class="gallery" id="gallery"></div>
+        <div class="empty-state" id="emptyState">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <h2>No media yet</h2>
+            <p>Tap "Add Media" to import photos and videos</p>
+        </div>
+    </main>
+
+    <!-- Lightbox / Media Viewer -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">&times;</button>
+        <button class="lightbox-nav prev" id="prevBtn">‹</button>
+        <button class="lightbox-nav next" id="nextBtn">›</button>
+
+        <div class="media-container" id="mediaContainer"></div>
+
+        <div class="media-controls">
+            <div class="video-controls" id="videoControls">
+                <button class="control-btn" id="playPauseBtn">▶</button>
+                <input type="range" id="seekBar" value="0" min="0" max="100">
+                <span id="timeDisplay">0:00 / 0:00</span>
+                <label class="brightness-control">
+                    ☀ <input type="range" id="brightness" min="50" max="200" value="100">
+                </label>
+            </div>
+            <div class="action-bar">
+                <button class="action-btn" id="favoriteBtn">♡ Favorite</button>
+                <button class="action-btn" id="shareBtn">Share</button>
+                <button class="action-btn" id="albumAddBtn">Add to Album</button>
+                <button class="action-btn danger" id="deleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Album Modal -->
+    <div class="modal" id="albumModal">
+        <div class="modal-content">
+            <h3>Create New Album</h3>
+            <input type="text" id="albumNameInput" placeholder="Album name">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelAlbum">Cancel</button>
+                <button class="btn" id="saveAlbum">Create</button>
+            </div>
+        </div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
