@@ -1,346 +1,306 @@
-let db;
-let currentMedia = [];
-let currentIndex = 0;
-let currentFilter = 'all';
-let albums = [];
+// AUTH CHECK - dashboard, how-to-use, cart, contact ALL require login
+const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0] || 'index';
+const protectedPages = ['dashboard', 'how-to-use', 'cart', 'contact'];
 
-const DB_NAME = 'MediaGalleryDB';
-const MEDIA_STORE = 'media';
-const ALBUM_STORE = 'albums';
-
-// DB Setup
-async function initDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 2);
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-            db = request.result;
-            resolve(db);
-        };
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            if (!db.objectStoreNames.contains(MEDIA_STORE)) {
-                const store = db.createObjectStore(MEDIA_STORE, { keyPath: 'id', autoIncrement: true });
-                store.createIndex('type', 'type');
-                store.createIndex('favorite', 'favorite');
-            }
-            if (!db.objectStoreNames.contains(ALBUM_STORE)) {
-                db.createObjectStore(ALBUM_STORE, { keyPath: 'id', autoIncrement: true });
-            }
-        };
-    });
+if (protectedPages.includes(currentPath)) {
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
+  if (isLoggedIn !== 'true') {
+    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+    window.location.replace('/login');
+  }
 }
 
-// Storage permission request
-async function requestStorage() {
-    try {
-        await initDB();
-        if (navigator.storage && navigator.storage.persist) {
-            const persisted = await navigator.storage.persist();
-            if (!persisted) document.getElementById('permissionBanner').style.display = 'block';
-        }
-        loadAlbums();
-        loadMedia();
-    } catch (err) {
-        document.getElementById('permissionBanner').style.display = 'block';
+// Redirect after login to page they tried to access
+const redirectPath = localStorage.getItem('redirectAfterLogin');
+if ((currentPath === 'login' || currentPath === 'signup') && localStorage.getItem('isLoggedIn') === 'true' && redirectPath) {
+  localStorage.removeItem('redirectAfterLogin');
+  window.location.replace(redirectPath);
+}
+
+// MOBILE MENU TOGGLE
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+if (menuToggle) {
+  menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+  });
+  
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+    });
+  });
+}
+
+// Update cart count
+function updateCartCount() {
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  const cartCountEl = document.getElementById('cartCount');
+  if (cartCountEl) cartCountEl.textContent = cart.length;
+}
+updateCartCount();
+
+// Logout - clears session and blocks back button
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.clear();
+    window.location.replace('/');
+  });
+}
+
+// Signup Form
+const signupForm = document.getElementById('signupForm');
+if (signupForm) {
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const loader = document.getElementById('loader');
+    loader.classList.remove('hidden');
+    
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userEmail', document.getElementById('email').value);
+    
+    setTimeout(() => {
+      const redirect = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+      localStorage.removeItem('redirectAfterLogin');
+      window.location.replace(redirect);
+    }, 500);
+  });
+}
+
+// Login Form
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const loader = document.getElementById('loader');
+    loader.classList.remove('hidden');
+    
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userEmail', document.getElementById('loginEmail').value);
+    
+    setTimeout(() => {
+      const redirect = localStorage.getItem('redirectAfterLogin') || '/dashboard';
+      localStorage.removeItem('redirectAfterLogin');
+      window.location.replace(redirect);
+    }, 500);
+  });
+}
+
+// Apple Liquid Glass Scroll Down Button
+const scrollDownBtn = document.getElementById('scrollDownBtn');
+if (scrollDownBtn) {
+  scrollDownBtn.addEventListener('click', () => {
+    document.querySelector('.features').scrollIntoView({ 
+      behavior: 'smooth' 
+    });
+  });
+  
+  // Hide button when user scrolls down
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 100) {
+      scrollDownBtn.style.opacity = '0';
+      scrollDownBtn.style.pointerEvents = 'none';
+    } else {
+      scrollDownBtn.style.opacity = '1';
+      scrollDownBtn.style.pointerEvents = 'all';
     }
+  });
 }
 
-// Media CRUD
-async function addMedia(file) {
-    const reader = new FileReader();
-    return new Promise((resolve) => {
-        reader.onload = (e) => {
-            const tx = db.transaction([MEDIA_STORE], 'readwrite');
-            tx.objectStore(MEDIA_STORE).add({
-                data: e.target.result,
-                name: file.name,
-                type: file.type.startsWith('video')? 'video' : 'image',
-                date: new Date().toISOString(),
-                favorite: false,
-                albums: []
-            }).onsuccess = resolve;
-        };
-        reader.readAsDataURL(file);
-    });
+// Apps with logos
+const apps = [
+  { name: 'WhatsApp', logo: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg', multiplier: 1.2 },
+  { name: 'Telegram', logo: 'https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg', multiplier: 1.0 },
+  { name: 'Facebook', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg', multiplier: 0.9 },
+  { name: 'Instagram', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png', multiplier: 1.1 },
+  { name: 'Google', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg', multiplier: 1.3 },
+  { name: 'Twitter/X', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg', multiplier: 1.0 },
+  { name: 'TikTok', logo: 'https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg', multiplier: 0.8 },
+  { name: 'Discord', logo: 'https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png', multiplier: 0.7 }
+];
+
+// Naira pricing
+function getCountryPrice(countryCode, appMultiplier = 1) {
+  const tier1 = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'NL', 'SE', 'CH'];
+  const tier2 = ['NG', 'ZA', 'KE', 'GH', 'IN', 'BR', 'MX', 'ES', 'IT', 'RU', 'UA', 'PL'];
+  
+  let basePrice;
+  if (tier1.includes(countryCode)) {
+    basePrice = Math.floor(Math.random() * 1200) + 2000;
+  } else if (tier2.includes(countryCode)) {
+    basePrice = Math.floor(Math.random() * 800) + 1200;
+  } else if (['CN', 'JP', 'KR', 'SG', 'AE', 'SA', 'TR'].includes(countryCode)) {
+    basePrice = Math.floor(Math.random() * 400) + 800;
+  } else {
+    basePrice = Math.floor(Math.random() * 400) + 400;
+  }
+  
+  return Math.round((basePrice * appMultiplier) / 50) * 50;
 }
 
-async function getAllMedia() {
-    return new Promise((resolve) => {
-        const tx = db.transaction([MEDIA_STORE], 'readonly');
-        tx.objectStore(MEDIA_STORE).getAll().onsuccess = (e) => resolve(e.target.result);
-    });
+// Show app list
+const appsList = document.getElementById('appsList');
+if (appsList) {
+  apps.forEach(app => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `
+      <div class="list-item-left">
+        <img src="${app.logo}" alt="${app.name}" class="list-item-logo">
+        <div class="list-item-info">
+          <h3>${app.name}</h3>
+          <p>Virtual number for ${app.name}</p>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-small" onclick="showCountries('${app.name}', '${app.logo}', ${app.multiplier})">
+        Select
+      </button>
+    `;
+    item.onclick = () => showCountries(app.name, app.logo, app.multiplier);
+    appsList.appendChild(item);
+  });
 }
 
-async function updateMedia(id, updates) {
-    return new Promise((resolve) => {
-        const tx = db.transaction([MEDIA_STORE], 'readwrite');
-        const store = tx.objectStore(MEDIA_STORE);
-        store.get(id).onsuccess = (e) => {
-            const data = {...e.target.result,...updates };
-            store.put(data).onsuccess = resolve;
-        };
-    });
-}
-
-async function deleteMedia(id) {
-    return new Promise((resolve) => {
-        const tx = db.transaction([MEDIA_STORE], 'readwrite');
-        tx.objectStore(MEDIA_STORE).delete(id).onsuccess = resolve;
-    });
-}
-
-// Albums
-async function createAlbum(name) {
-    return new Promise((resolve) => {
-        const tx = db.transaction([ALBUM_STORE], 'readwrite');
-        tx.objectStore(ALBUM_STORE).add({ name, date: new Date().toISOString() }).onsuccess = resolve;
-    });
-}
-
-async function getAllAlbums() {
-    return new Promise((resolve) => {
-        const tx = db.transaction([ALBUM_STORE], 'readonly');
-        tx.objectStore(ALBUM_STORE).getAll().onsuccess = (e) => resolve(e.target.result);
-    });
-}
-
-// UI Elements
-const gallery = document.getElementById('gallery');
-const fileInput = document.getElementById('fileInput');
-const emptyState = document.getElementById('emptyState');
-const lightbox = document.getElementById('lightbox');
-const mediaContainer = document.getElementById('mediaContainer');
-const videoControls = document.getElementById('videoControls');
-
-// Load and render
-async function loadMedia() {
-    let allMedia = await getAllMedia();
-
-    if (currentFilter === 'favorites') {
-        allMedia = allMedia.filter(m => m.favorite);
-    } else if (currentFilter === 'images') {
-        allMedia = allMedia.filter(m => m.type === 'image');
-    } else if (currentFilter === 'videos') {
-        allMedia = allMedia.filter(m => m.type === 'video');
-    } else if (currentFilter.startsWith('album-')) {
-        const albumId = parseInt(currentFilter.split('-')[1]);
-        allMedia = allMedia.filter(m => m.albums.includes(albumId));
-    }
-
-    currentMedia = allMedia.reverse();
-    renderGallery();
-}
-
-async function loadAlbums() {
-    albums = await getAllAlbums();
-    const albumList = document.getElementById('albumList');
-    albumList.innerHTML = albums.map(a =>
-        `<div class="dropdown-item" data-album="${a.id}">${a.name}</div>`
-    ).join('');
-}
-
-function renderGallery() {
-    gallery.innerHTML = '';
-
-    if (currentMedia.length === 0) {
-        emptyState.style.display = 'block';
-        return;
-    }
-    emptyState.style.display = 'none';
-
-    currentMedia.forEach((media, idx) => {
+// Show countries list
+let selectedApp = null;
+function showCountries(appName, appLogo, multiplier) {
+  selectedApp = { name: appName, logo: appLogo, multiplier: multiplier };
+  
+  document.getElementById('appListView').classList.add('hidden');
+  document.getElementById('countryListView').classList.remove('hidden');
+  document.getElementById('selectedAppTitle').textContent = `Select Country`;
+  document.getElementById('selectedAppName').textContent = appName;
+  
+  const countriesList = document.getElementById('countriesList');
+  const loader = document.getElementById('servicesLoader');
+  countriesList.innerHTML = '';
+  loader.classList.remove('hidden');
+  
+  fetch('https://restcountries.com/v3.1/all?fields=name,flags,cca2,idd')
+    .then(res => res.json())
+    .then(data => {
+      loader.classList.add('hidden');
+      
+      const popular = ['NG', 'US', 'GB', 'CA', 'ZA', 'KE', 'GH', 'IN', 'DE', 'FR'];
+      data.sort((a, b) => {
+        const aIndex = popular.indexOf(a.cca2);
+        const bIndex = popular.indexOf(b.cca2);
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+        if (aIndex !== -1) return -1;
+        if (bIndex !== -1) return 1;
+        return a.name.common.localeCompare(b.name.common);
+      });
+      
+      data.slice(0, 50).forEach(country => {
+        const price = getCountryPrice(country.cca2, multiplier);
+        const phoneCode = country.idd.root ? `${country.idd.root}${country.idd.suffixes?.[0] || ''}` : '+1';
+        
         const item = document.createElement('div');
-        item.className = 'gallery-item';
-
-        const mediaEl = media.type === 'video'
-           ? `<video src="${media.data}" muted></video><div class="video-badge">▶</div>`
-            : `<img src="${media.data}" alt="${media.name}">`;
-
+        item.className = 'list-item';
         item.innerHTML = `
-            ${mediaEl}
-            ${media.favorite? '<div class="favorite-badge">❤</div>' : ''}
-            <div class="item-overlay"></div>
+          <div class="list-item-left">
+            <img src="${country.flags.png}" alt="${country.name.common}" class="list-item-flag">
+            <div class="list-item-info">
+              <h3>${country.name.common}</h3>
+              <p>${phoneCode}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="list-item-price">₦${price.toLocaleString()}</div>
+            <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); addToCart('${appName}', '${country.name.common}', '${country.cca2}', ${price})">
+              Add
+            </button>
+          </div>
         `;
-
-        item.onclick = () => openLightbox(idx);
-        gallery.appendChild(item);
+        item.onclick = () => addToCart(appName, country.name.common, country.cca2, price);
+        countriesList.appendChild(item);
+      });
+    })
+    .catch(err => {
+      loader.classList.add('hidden');
+      countriesList.innerHTML = '<p style="text-align:center; padding:2rem;">Failed to load countries. Please refresh.</p>';
     });
 }
 
-// Lightbox
-function openLightbox(idx) {
-    currentIndex = idx;
-    updateLightbox();
-    lightbox.classList.add('active');
+// Back to apps
+const backToApps = document.getElementById('backToApps');
+if (backToApps) {
+  backToApps.addEventListener('click', () => {
+    document.getElementById('countryListView').classList.add('hidden');
+    document.getElementById('appListView').classList.remove('hidden');
+  });
 }
 
-function updateLightbox() {
-    const media = currentMedia[currentIndex];
-    const isVideo = media.type === 'video';
-
-    mediaContainer.innerHTML = isVideo
-       ? `<video id="lightboxVideo" src="${media.data}" autoplay></video>`
-        : `<img src="${media.data}" alt="${media.name}">`;
-
-    videoControls.classList.toggle('active', isVideo);
-    document.getElementById('favoriteBtn').textContent = media.favorite? '❤ Favorited' : '♡ Favorite';
-
-    if (isVideo) setupVideoControls();
+// Add to cart
+function addToCart(appName, countryName, countryCode, price) {
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  cart.push({ appName, countryName, countryCode, price: parseInt(price), id: Date.now() });
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartCount();
+  alert(`${appName} - ${countryName} added for ₦${price.toLocaleString()}!`);
 }
 
-function setupVideoControls() {
-    const video = document.getElementById('lightboxVideo');
-    const playBtn = document.getElementById('playPauseBtn');
-    const seekBar = document.getElementById('seekBar');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const brightness = document.getElementById('brightness');
-
-    playBtn.onclick = () => {
-        if (video.paused) {
-            video.play();
-            playBtn.textContent = '⏸';
-        } else {
-            video.pause();
-            playBtn.textContent = '▶';
-        }
-    };
-
-    video.ontimeupdate = () => {
-        seekBar.value = (video.currentTime / video.duration) * 100 || 0;
-        timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
-    };
-
-    seekBar.oninput = () => {
-        video.currentTime = (seekBar.value / 100) * video.duration;
-    };
-
-    brightness.oninput = () => {
-        video.style.filter = `brightness(${brightness.value}%)`;
-    };
+// Cart page
+const cartItems = document.getElementById('cartItems');
+if (cartItems) {
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  const cartEmpty = document.getElementById('cartEmpty');
+  const cartSummary = document.getElementById('cartSummary');
+  
+  if (cart.length === 0) {
+    cartEmpty.classList.remove('hidden');
+  } else {
+    cartSummary.classList.remove('hidden');
+    let total = 0;
+    
+    cart.forEach(item => {
+      total += item.price;
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <div>
+          <h4>${item.appName} - ${item.countryName}</h4>
+          <p>Code: ${item.countryCode}</p>
+        </div>
+        <div>
+          <strong>₦${item.price.toLocaleString()}</strong>
+          <button class="btn btn-secondary" onclick="removeFromCart(${item.id})">Remove</button>
+        </div>
+      `;
+      cartItems.appendChild(div);
+    });
+    
+    document.getElementById('cartTotal').textContent = total.toLocaleString();
+  }
 }
 
-function formatTime(s) {
-    if (isNaN(s)) return '0:00';
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, '0')}`;
+// Remove from cart
+function removeFromCart(id) {
+  let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  cart = cart.filter(item => item.id !== id);
+  localStorage.setItem('cart', JSON.stringify(cart));
+  location.reload();
 }
 
-function nextMedia() {
-    currentIndex = (currentIndex + 1) % currentMedia.length;
-    updateLightbox();
+// Checkout to WhatsApp
+const checkoutBtn = document.getElementById('checkoutBtn');
+if (checkoutBtn) {
+  checkoutBtn.addEventListener('click', () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const userEmail = localStorage.getItem('userEmail') || 'Guest';
+    
+    let message = `Hello! I want to order SMS virtual numbers:%0A%0A`;
+    message += `Email: ${userEmail}%0A%0AItems:%0A`;
+    
+    let total = 0;
+    cart.forEach((item, i) => {
+      message += `${i+1}. ${item.appName} - ${item.countryName} (${item.countryCode}) - ₦${item.price.toLocaleString()}%0A`;
+      total += item.price;
+    });
+    
+    message += `%0ATotal: ₦${total.toLocaleString()}%0A%0APlease confirm my order.`;
+    window.open(`https://wa.me/2348088639901?text=${message}`, '_blank');
+  });
 }
-
-function prevMedia() {
-    currentIndex = (currentIndex - 1 + currentMedia.length) % currentMedia.length;
-    updateLightbox();
-}
-
-// Share API
-async function shareMedia() {
-    const media = currentMedia[currentIndex];
-    try {
-        const res = await fetch(media.data);
-        const blob = await res.blob();
-        const file = new File([blob], media.name, { type: blob.type });
-
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: media.name
-            });
-        } else {
-            // Fallback: download
-            const a = document.createElement('a');
-            a.href = media.data;
-            a.download = media.name;
-            a.click();
-        }
-    } catch (err) {
-        alert('Sharing not supported. Image saved to downloads instead.');
-    }
-}
-
-// Event Listeners
-document.getElementById('addBtn').onclick = () => fileInput.click();
-fileInput.onchange = async (e) => {
-    for (const file of e.target.files) await addMedia(file);
-    fileInput.value = '';
-    loadMedia();
-};
-
-document.getElementById('newAlbumBtn').onclick = () => {
-    document.getElementById('albumModal').classList.add('active');
-};
-
-document.getElementById('cancelAlbum').onclick = () => {
-    document.getElementById('albumModal').classList.remove('active');
-};
-
-document.getElementById('saveAlbum').onclick = async () => {
-    const name = document.getElementById('albumNameInput').value.trim();
-    if (name) {
-        await createAlbum(name);
-        document.getElementById('albumNameInput').value = '';
-        document.getElementById('albumModal').classList.remove('active');
-        loadAlbums();
-    }
-};
-
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.onclick = () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentFilter = tab.dataset.filter;
-        loadMedia();
-    };
-});
-
-document.getElementById('albumList').onclick = (e) => {
-    if (e.target.classList.contains('dropdown-item')) {
-        currentFilter = `album-${e.target.dataset.album}`;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('albumTab').classList.add('active');
-        loadMedia();
-    }
-};
-
-document.getElementById('lightboxClose').onclick = () => lightbox.classList.remove('active');
-document.getElementById('nextBtn').onclick = nextMedia;
-document.getElementById('prevBtn').onclick = prevMedia;
-
-document.getElementById('favoriteBtn').onclick = async () => {
-    const media = currentMedia[currentIndex];
-    await updateMedia(media.id, { favorite:!media.favorite });
-    currentMedia[currentIndex].favorite =!media.favorite;
-    updateLightbox();
-    renderGallery();
-};
-
-document.getElementById('deleteBtn').onclick = async () => {
-    if (confirm('Delete this media?')) {
-        await deleteMedia(currentMedia[currentIndex].id);
-        lightbox.classList.remove('active');
-        loadMedia();
-    }
-};
-
-document.getElementById('shareBtn').onclick = shareMedia;
-
-document.getElementById('albumAddBtn').onclick = async () => {
-    const albumName = prompt(`Add to which album?\n${albums.map((a,i) => `${i+1}. ${a.name}`).join('\n')}\n\nEnter album number:`);
-    const idx = parseInt(albumName) - 1;
-    if (albums[idx]) {
-        const media = currentMedia[currentIndex];
-        const albumList = media.albums || [];
-        if (!albumList.includes(albums[idx].id)) {
-            albumList.push(albums[idx].id);
-            await updateMedia(media.id, { albums: albumList });
-            alert(`Added to ${albums[idx].name}`);
-        }
-    }
-};
-
-// Init
-requestStorage();
